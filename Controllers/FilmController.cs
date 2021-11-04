@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using aspnetCoreAPI.Data;
+using aspnetCoreAPI.Data.Dtos;
 using aspnetCoreAPI.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace aspnetCoreAPI.Controllers
@@ -13,12 +15,19 @@ namespace aspnetCoreAPI.Controllers
     public class FilmController : ControllerBase
     {
         private FilmContext _context;
+        private IMapper _mapper;
 
-        public FilmController(FilmContext context) => _context = context;
+        public FilmController(FilmContext context, IMapper mapper)
+        {
+            _context = context;
+            _mapper = mapper;
+        }
 
         [HttpPost]
-        public IActionResult NewFilm([FromBody] Film film)
+        public IActionResult NewFilm([FromBody] CreateFilmDto filmDto)
         {
+            // Converte de FilmDto para Film.
+            Film film = _mapper.Map<Film>(filmDto);
             _context.Films.Add(film);
             _context.SaveChanges();
             return CreatedAtAction(nameof(GetFilm), new { Id = film.Id }, film);
@@ -31,21 +40,23 @@ namespace aspnetCoreAPI.Controllers
         public IActionResult GetFilm(int id)
         {
             var film = _context.Films.FirstOrDefault(film => film.Id == id);
-            if (film != null) return Ok(film);
+            if (film != null)
+            {
+                ReadFilmDto filmDto = _mapper.Map<ReadFilmDto>(film);
+                return Ok(filmDto);
+            }
 
             return NotFound();
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateFilm(int id, [FromBody] Film updatedFilm)
+        public IActionResult UpdateFilm(int id, [FromBody] UpdateFilmDto filmDto)
         {
             var film = _context.Films.FirstOrDefault(film => film.Id == id);
             if (film == null) return NotFound();
 
-            film.Title = updatedFilm.Title;
-            film.Genre = updatedFilm.Genre;
-            film.Director = updatedFilm.Director;
-            film.Length = updatedFilm.Length;
+            // Sobreescreve film com as informações de filmDto.
+            _mapper.Map(filmDto, film);
             _context.SaveChanges();
             return NoContent();
         }

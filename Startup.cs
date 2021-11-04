@@ -30,6 +30,7 @@ namespace aspnetCoreAPI
         {
             services.AddDbContext<FilmContext>(options => options.UseSqlite(Configuration.GetConnectionString("FilmConnection")));
             services.AddControllers();
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
